@@ -1,8 +1,10 @@
+import { Auth } from 'aws-amplify';
 import React, { useState } from 'react';
 import { Form } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom';
 import LoaderButton from '../components/LoaderButton';
 import { useAppContext } from '../libs/contextLib';
+import { onError } from '../libs/errorLib';
 import { useFormFields } from '../libs/hooksLib';
 
 export default function Signup() {
@@ -34,7 +36,21 @@ export default function Signup() {
     event.preventDefault();
 
     setIsLoading(true);
-    setNewUser("test");
+    try {
+      const newUser = await Auth.signUp({
+        username: fields.email,
+        password: fields.password,
+      });
+      setNewUser(newUser);
+    } catch (e) {
+      if (!(e instanceof Error) &&
+          e.message === "An account with the given email already exists.") {
+        await Auth.resendSignUp(fields.email);
+        setNewUser(true);
+      } else {
+        onError(e);
+      }
+    }
     setIsLoading(false);
   }
 
@@ -42,13 +58,24 @@ export default function Signup() {
     event.preventDefault();
 
     setIsLoading(true);
+
+    try {
+      await Auth.confirmSignUp(fields.email, fields.confirmationCode);
+      await Auth.signIn(fields.email, fields.password);
+
+      userHasAuthenticated(true);
+      history.push("/");
+    } catch (e) {
+      onError(e);
+      setIsLoading(false);
+    }
   }
 
   function renderConfirmationForm() {
     return (
       <Form onSubmit={handleConfirmationSubmit}>
         <Form.Group controlId="confirmationCode" size="lg">
-          <Form.Labe>Confirmation Code</Form.Labe>
+          <Form.Label>Confirmation Code</Form.Label>
           <Form.Control 
             autoFocus
             type="tel"
