@@ -1,6 +1,5 @@
 import { React, useEffect, useState } from 'react';
-import Navbar from 'react-bootstrap/Navbar';
-import { Nav } from 'react-bootstrap';
+import { Nav, Navbar } from 'react-bootstrap';
 import Routes from "./Routes";
 import { LinkContainer } from 'react-router-bootstrap';
 import { AppContext } from "./libs/contextLib";
@@ -49,7 +48,14 @@ function App() {
           <Navbar.Collapse className="justify-content-end">
             <Nav activeKey={window.location.pathname}>
               {isAuthenticated ?
-                (<Nav.Link onClick={handleLogout}>Logout</Nav.Link>)
+                (
+                  <>
+                    <LinkContainer to="/settings">
+                      <Nav.Link>Settings</Nav.Link>
+                    </LinkContainer>
+                    <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+                  </>
+                )
                 :
                 (
                   <>
